@@ -17,8 +17,8 @@ on:
           - 'false'
 
 env:
-  SOLUTION_FILE_PATH: .
-  BUILD_CONFIGURATION: Release
+  SOLUTION_FILE_PATH: FPLV.sln
+  BUILD_CONFIGURATION: "Euroscope 3.2"
   OUTPUT_DIR: ./build_output
 
 permissions:
@@ -37,6 +37,24 @@ jobs:
       with:
         vs-version: '[17.4,18.0)'
         msbuild-architecture: x86  # Important pour ton projet Win32
+
+    - name: Validate SDK dependencies exist
+      run: |
+        $required = @(
+          ".\inc\3.2\EuroScopePlugIn.h",
+          ".\inc\rapidjson\rapidjson.h",
+          ".\lib\3.2\Euroscope.lib"
+        )
+        $missing = @()
+        foreach ($p in $required) {
+          if (-not (Test-Path $p)) { $missing += $p }
+        }
+        if ($missing.Count -gt 0) {
+          Write-Host "Missing required files:"
+          $missing | ForEach-Object { Write-Host " - $_" }
+          Write-Host "Repository content must include inc/ and lib/ folders."
+          exit 1
+        }
 
     - name: Prebuild processing (versioning)
       run: |
@@ -57,7 +75,7 @@ jobs:
 
     - name: Build solution
       run: |
-        msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:outdir="${{ github.workspace }}/${{ env.OUTPUT_DIR }}\" ${{ env.SOLUTION_FILE_PATH }}
+        msbuild /m /p:Configuration="${{ env.BUILD_CONFIGURATION }}" /p:Platform=Win32 /p:OutDir="${{ github.workspace }}\${{ env.OUTPUT_DIR }}\" "${{ env.SOLUTION_FILE_PATH }}"
 
     - name: List ALL generated files (debug)
       run: |
