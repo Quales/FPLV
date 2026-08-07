@@ -101,6 +101,30 @@ namespace
 		return value.size() <= 15 ? value : value.substr(0, 15);
 	}
 
+	bool IsVfrFlightPlan(EuroScopePlugIn::CFlightPlan FlightPlan)
+	{
+		if (!FlightPlan.IsValid())
+			return false;
+
+		EuroScopePlugIn::CFlightPlanData fpData = FlightPlan.GetFlightPlanData();
+		const char* planType = fpData.GetPlanType();
+		return planType != NULL && std::toupper(static_cast<unsigned char>(planType[0])) == 'V';
+	}
+
+	const std::vector<FPLV::ValidationRule>& GetValidationRulesForFlightPlan(
+		EuroScopePlugIn::CFlightPlan FlightPlan,
+		const FPLV::ConfigData& configData)
+	{
+		static const std::vector<FPLV::ValidationRule> emptyRules;
+		if (IsVfrFlightPlan(FlightPlan))
+		{
+			if (configData.vfr_rules.empty())
+				return emptyRules;
+			return configData.vfr_rules;
+		}
+		return configData.rules;
+	}
+
 	const FPLV::ValidationSide* DetermineSideFromCoordinates(
 		EuroScopePlugIn::CFlightPlan FlightPlan,
 		const FPLV::ValidationRule& rule,
@@ -332,12 +356,14 @@ FPLV::ValidationResult FPLVExt::EvaluateFlightPlan(EuroScopePlugIn::CFlightPlan 
 	}
 
 	const char* callsign = FlightPlan.GetCallsign();
+	const bool isVfr = IsVfrFlightPlan(FlightPlan);
 	std::ostringstream debugStream;
 	debugStream << "FPL=" << (callsign != NULL ? callsign : "?");
+	debugStream << " plan=" << (isVfr ? "VFR" : "IFR");
 	debugStream << " final=" << FlightPlan.GetFlightPlanData().GetFinalAltitude();
 	debugStream << " debug=" << (IsDebugEnabled() ? "on" : "off");
 
-	const std::vector<FPLV::ValidationRule>& rules = config.Data().rules;
+	const std::vector<FPLV::ValidationRule>& rules = GetValidationRulesForFlightPlan(FlightPlan, config.Data());
 	for (size_t i = 0; i < rules.size(); ++i)
 	{
 		FPLV::ValidationResult current = EvaluateFlightPlanForRule(FlightPlan, rules[i]);
@@ -505,6 +531,27 @@ void FPLVExt::OnGetTagItem(EuroScopePlugIn::CFlightPlan FlightPlan,
 			*pColorCode = EuroScopePlugIn::TAG_COLOR_RGB_DEFINED;
 			*pRGB = RGB(140, 140, 140);
 		}
+		return;
+	}
+
+	{
+		EuroScopePlugIn::CFlightPlanData fpData = FlightPlan.GetFlightPlanData();
+		const std::string origin = fpData.GetOrigin() != NULL ? ToUpperCopy(fpData.GetOrigin()) : "";
+		const std::string destination = fpData.GetDestination() != NULL ? ToUpperCopy(fpData.GetDestination()) : "";
+		if (!origin.empty() && origin == destination)
+		{
+			strncpy_s(sItemString, 16, "", _TRUNCATE);
+			if (pColorCode != NULL)
+				*pColorCode = EuroScopePlugIn::TAG_COLOR_DEFAULT;
+			return;
+		}
+	}
+
+	if (IsVfrFlightPlan(FlightPlan) && config.Data().vfr_rules.empty())
+	{
+		strncpy_s(sItemString, 16, "", _TRUNCATE);
+		if (pColorCode != NULL)
+			*pColorCode = EuroScopePlugIn::TAG_COLOR_DEFAULT;
 		return;
 	}
 

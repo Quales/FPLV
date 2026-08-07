@@ -20,7 +20,7 @@ FPLV is a EuroScope plugin that validates flight plans against configurable rule
 
 ## Rule engine summary
 
-For each enabled rule, FPLV checks:
+For each enabled rule set, FPLV checks:
 
 1. RVSM requirement (`require_rvsm`)
 2. Optional altitude limits (`min_cleared_altitude`, `max_cleared_altitude`)
@@ -70,6 +70,15 @@ If missing, the plugin generates a default config automatically.
       }
     }
   ],
+  "vfr_rules": [
+    {
+      "name": "VFR east/west",
+      "axis": "east_west",
+      "require_rvsm": false,
+      "west": { "name": "West", "route_markers": ["WEST", "W"], "airport_markers": ["L"], "parity": "any" },
+      "east": { "name": "East", "route_markers": ["EAST", "E"], "airport_markers": ["E"], "parity": "any" }
+    }
+  ],
   "radio_callsigns": {
     "config": {
       "load_from_ese": false,
@@ -88,6 +97,7 @@ If missing, the plugin generates a default config automatically.
   - `debug_enabled` (bool)
   - `columns` (array)
   - `rules` (array)
+  - `vfr_rules` (array, optional)
   - `radio_callsigns` (object)
 - Rule:
   - `name` (string)

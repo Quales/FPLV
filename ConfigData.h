@@ -100,6 +100,7 @@ namespace FPLV
 		bool debug_enabled = false;
 		std::vector<ValidationColumn> columns;
 		std::vector<ValidationRule> rules;
+		std::vector<ValidationRule> vfr_rules;
 		RadioCallsigns_t RadioCallsigns;
 		bool loaded_from_ese = false;
 

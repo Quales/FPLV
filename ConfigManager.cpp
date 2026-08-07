@@ -170,6 +170,19 @@ namespace
 			rule.name = "validation-rule";
 		return rule;
 	}
+
+	void ParseRulesArray(const rapidjson::Value& value, std::vector<FPLV::ValidationRule>& rules)
+	{
+		if (!value.IsArray())
+			return;
+
+		for (rapidjson::SizeType i = 0; i < value.Size(); ++i)
+		{
+			FPLV::ValidationRule rule = ParseRule(value[i]);
+			if (!rule.name.empty())
+				rules.push_back(rule);
+		}
+	}
 }
 
 namespace FPLV
@@ -245,18 +258,10 @@ namespace FPLV
 			data.columns.push_back(column);
 		}
 
-		if (json_document.HasMember("rules") && json_document["rules"].IsArray())
-		{
-			const rapidjson::Value& rules = json_document["rules"];
-			for (rapidjson::SizeType i = 0; i < rules.Size(); ++i)
-			{
-				ValidationRule rule = ParseRule(rules[i]);
-				if (!rule.name.empty())
-				{
-					data.rules.push_back(rule);
-				}
-			}
-		}
+		if (json_document.HasMember("rules"))
+			ParseRulesArray(json_document["rules"], data.rules);
+		if (json_document.HasMember("vfr_rules"))
+			ParseRulesArray(json_document["vfr_rules"], data.vfr_rules);
 
 		if (data.rules.empty())
 		{

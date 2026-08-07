@@ -32,6 +32,7 @@ namespace FPLV
 		debug_enabled = false;
 		columns.clear();
 		rules.clear();
+		vfr_rules.clear();
 		RadioCallsigns.clear();
 		loaded_from_ese = false;
 	}
