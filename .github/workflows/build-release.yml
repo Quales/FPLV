@@ -44,10 +44,10 @@ jobs:
         $PLUGIN_VERSION = $vPLUGIN_VERSION.Replace('v', '')
         echo "PLUGIN_VERSION=$PLUGIN_VERSION"
 
-        (Get-Content .\DiscordEuroScope\config.h) -replace '(#define PLUGIN_VERSION\s*)\(".+"\)', "`${1}(`"$PLUGIN_VERSION`")" | Set-Content .\DiscordEuroscope\config.h
-        (Get-Content .\DiscordEuroScope\DiscordEuroscope.rc) -replace '(VALUE "(?:File|Product)Version", ")(.+)"', "`${1}$PLUGIN_VERSION`"" | Set-Content .\DiscordEuroscope\DiscordEuroscope.rc
+        (Get-Content .\config.h) -replace '(#define PLUGIN_VERSION\s*)\(".+"\)', "`${1}(`"$PLUGIN_VERSION`")" | Set-Content .\config.h
+        (Get-Content .\FPLV.rc) -replace '(VALUE "(?:File|Product)Version", ")(.+)"', "`${1}$PLUGIN_VERSION`"" | Set-Content .\FPLV.rc
         $x = ($PLUGIN_VERSION.Replace(".", ",") -replace '(\d,\d,\d)(.+)', '$1')
-        (Get-Content .\DiscordEuroScope\DiscordEuroscope.rc) -replace '((?:FILE|PRODUCT)VERSION ).+', "`${1}$x" | Set-Content .\DiscordEuroscope\DiscordEuroscope.rc
+        (Get-Content .\FPLV.rc) -replace '((?:FILE|PRODUCT)VERSION ).+', "`${1}$x" | Set-Content .\FPLV.rc
 
     - name: Create output directory
       run: mkdir -Force "${{ github.workspace }}/${{ env.OUTPUT_DIR }}"
@@ -71,7 +71,7 @@ jobs:
       with:
         tag_name: ${{ inputs.tag }}
         prerelease: ${{ inputs.prerelease }}
-        files: ${{ github.workspace }}/${{ env.OUTPUT_DIR }}/DiscordEuroscope.dll
+        files: ${{ github.workspace }}/${{ env.OUTPUT_DIR }}/FPLV.dll
         overwrite_files: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
