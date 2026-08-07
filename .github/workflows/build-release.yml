@@ -1,0 +1,77 @@
+name: Build Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        required: true
+        default: 'main'
+      tag:
+        required: true
+      prerelease:
+        required: false
+        default: false
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+env:
+  SOLUTION_FILE_PATH: .
+  BUILD_CONFIGURATION: Release
+  OUTPUT_DIR: ./build_output
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild environment
+      uses: microsoft/setup-msbuild@v1.1
+      with:
+        vs-version: '[17.4,18.0)'
+        msbuild-architecture: x86  # Important pour ton projet Win32
+
+    - name: Prebuild processing (versioning)
+      run: |
+        $vPLUGIN_VERSION = "${{inputs.tag}}"
+        $PLUGIN_VERSION = $vPLUGIN_VERSION.Replace('v', '')
+        echo "PLUGIN_VERSION=$PLUGIN_VERSION"
+
+        (Get-Content .\DiscordEuroScope\config.h) -replace '(#define PLUGIN_VERSION\s*)\(".+"\)', "`${1}(`"$PLUGIN_VERSION`")" | Set-Content .\DiscordEuroscope\config.h
+        (Get-Content .\DiscordEuroScope\DiscordEuroscope.rc) -replace '(VALUE "(?:File|Product)Version", ")(.+)"', "`${1}$PLUGIN_VERSION`"" | Set-Content .\DiscordEuroscope\DiscordEuroscope.rc
+        $x = ($PLUGIN_VERSION.Replace(".", ",") -replace '(\d,\d,\d)(.+)', '$1')
+        (Get-Content .\DiscordEuroScope\DiscordEuroscope.rc) -replace '((?:FILE|PRODUCT)VERSION ).+', "`${1}$x" | Set-Content .\DiscordEuroscope\DiscordEuroscope.rc
+
+    - name: Create output directory
+      run: mkdir -Force "${{ github.workspace }}/${{ env.OUTPUT_DIR }}"
+
+    - name: Verify MSBuild installation
+      run: msbuild -version
+
+    - name: Build solution
+      run: |
+        msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:outdir="${{ github.workspace }}/${{ env.OUTPUT_DIR }}\" ${{ env.SOLUTION_FILE_PATH }}
+
+    - name: List ALL generated files (debug)
+      run: |
+        echo "=== Contenu complet du workspace ==="
+        Get-ChildItem -Path "${{ github.workspace }}" -Recurse -Force
+        echo "=== Contenu spécifique du dossier de sortie ==="
+        Get-ChildItem -Path "${{ github.workspace }}/${{ env.OUTPUT_DIR }}" -Recurse -Force
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ inputs.tag }}
+        prerelease: ${{ inputs.prerelease }}
+        files: ${{ github.workspace }}/${{ env.OUTPUT_DIR }}/DiscordEuroscope.dll
+        overwrite_files: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

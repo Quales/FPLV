@@ -1,0 +1,31 @@
+name: MSBuild
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+env:
+  SOLUTION_FILE_PATH: .
+  BUILD_CONFIGURATION: Release
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-2022  # Utilise une image avec VS2022 préinstallé
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild environment (avec MFC)
+      uses: microsoft/setup-msbuild@v1.1
+      with:
+        vs-version: '[17.4,18.0)'
+        msbuild-architecture: x64
+
+    - name: Build solution
+      run: |
+        msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:outdir=D:\out\ ${{env.SOLUTION_FILE_PATH}}
