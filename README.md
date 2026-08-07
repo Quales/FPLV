@@ -1,5 +1,7 @@
 # FPLV (EuroScope Flight Plan Validator)
 
+[Download FPLV.dll in the latest release](https://github.com/Quales/FPLV/releases/latest)
+
 FPLV is a EuroScope plugin that validates flight plans against configurable rules (RVSM, direction, flight level parity, altitude range) and displays results directly in a custom flight plan list.
 
 ## What it does
@@ -114,4 +116,3 @@ Clicking the **status** column function toggles verbose issue text.
 ## License
 
 GNU GPLv3 (see file headers in source).
-
