@@ -18,6 +18,35 @@ FPLV is a EuroScope plugin that validates flight plans against configurable rule
   - Red: multiple/other errors
 - Supports runtime debug messages for per-rule evaluation tracing.
 
+## Screenshots
+
+Columns are as follows in my configuration :
+
+- FPLV status
+- FPLV issues
+- FPLV direction
+
+
+- Status column will display OK, FL, ERR
+- Issue column will display the issue
+- Direction column will display the direction of the flight
+
+### From TNCM to TAPA, going east, should have an odd flight level. 230 is correct
+
+![TNCM-TAPA-E-230](docs/assets/TNCM-TAPA-E-230.png)
+
+### From TNCM to TAPA, going east, should have an odd flight level. 240 is incorrect
+
+![TNCM-TAPA-E-240](docs/assets/TNCM-TAPA-E-240.png)
+
+### From TNCM to TJSJ, going west, should have an even flight level. 180 is correct
+
+![TNCM-TJSJ-W-180](docs/assets/TNCM-TJSJ-W-180.png)
+
+### From TNCM to TJSJ, going west, should have an even flight level. 170 is incorrect
+
+![TNCM-TJSJ-W-170](docs/assets/TNCM-TJSJ-W-170.png)
+
 ## Rule engine summary
 
 For each enabled rule set, FPLV checks:
