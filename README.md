@@ -20,12 +20,7 @@ FPLV is a EuroScope plugin that validates flight plans against configurable rule
 
 ## Screenshots
 
-Columns are as follows in my configuration :
-
-- FPLV status
-- FPLV issues
-- FPLV direction
-
+Columns are as follows in my configuration : FPLV status / FPLV issues /  FPLV direction
 
 - Status column will display OK, FL, ERR
 - Issue column will display the issue
