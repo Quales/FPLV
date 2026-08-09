@@ -42,26 +42,9 @@ Columns are as follows in my configuration : FPLV status / FPLV issues /  FPLV d
 
 ![TNCM-TJSJ-W-170](docs/assets/TNCM-TJSJ-W-170.crop.png)
 
-## Rule engine summary
-
-For each enabled rule set, FPLV checks:
-
-1. RVSM requirement (`require_rvsm`)
-2. Optional altitude limits (`min_cleared_altitude`, `max_cleared_altitude`)
-3. Direction side detection:
-   - First from extracted route coordinates (`GetExtractedRoute`)
-   - Fallback to route/airport markers
-4. Flight level parity on normalized level:
-   - `35000 -> 35`, `36000 -> 36`, etc.
-   - then odd/even check based on the selected side
+----
 
 ## Configuration file
-
-File name is fixed by `config.h`:
-
-- `FPLV_rules.json`
-
-If missing, the plugin generates a default config automatically.
 
 ### Example config
 
@@ -102,51 +85,9 @@ If missing, the plugin generates a default config automatically.
       "west": { "name": "West", "route_markers": ["WEST", "W"], "airport_markers": ["L"], "parity": "any" },
       "east": { "name": "East", "route_markers": ["EAST", "E"], "airport_markers": ["E"], "parity": "any" }
     }
-  ],
-  "radio_callsigns": {
-    "config": {
-      "load_from_ese": false,
-      "path_to_ese": ".\\"
-    },
-    "custom_callsigns": {}
-  }
+  ]
 }
 ```
-
-### Supported fields
-
-- Root:
-  - `plugin_name` (string)
-  - `list_name` (string)
-  - `debug_enabled` (bool)
-  - `columns` (array)
-  - `rules` (array)
-  - `vfr_rules` (array, optional)
-  - `radio_callsigns` (object)
-- Rule:
-  - `name` (string)
-  - `axis`: `east_west` or `north_south`
-  - `require_rvsm` (bool)
-  - `min_cleared_altitude` (int, optional)
-  - `max_cleared_altitude` (int, optional)
-  - `enabled` (bool, optional)
-  - side blocks:
-    - East/West rules: `west`, `east`
-    - North/South rules: `north`, `south`
-- Side:
-  - `name` (string)
-  - `route_markers` (string array)
-  - `airport_markers` (string array)
-  - `parity`: `odd`, `even`, `any`
-
-## EuroScope commands
-
-- `.fplv reload` - reload JSON config
-- `.fplv debug` - toggle runtime debug
-- `.fplv debug on`
-- `.fplv debug off`
-
-Clicking the **status** column function toggles verbose issue text.
 
 ## License
 
