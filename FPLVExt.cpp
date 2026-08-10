@@ -210,7 +210,6 @@ void FPLVExt::LoadConfigOrCreateDefault()
 		config.Init(configPath.string());
 	}
 
-	config.LoadRadioCallsigns();
 	lastDebugMessages.clear();
 }
 

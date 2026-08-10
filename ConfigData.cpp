@@ -28,12 +28,10 @@ namespace FPLV
 	void ConfigData::Cleanup()
 	{
 		plugin_name = "FPLV";
-		list_name = "FPLV Validation";
+		list_name = "Flight plan validation";
 		debug_enabled = false;
 		columns.clear();
 		rules.clear();
 		vfr_rules.clear();
-		RadioCallsigns.clear();
-		loaded_from_ese = false;
 	}
 }

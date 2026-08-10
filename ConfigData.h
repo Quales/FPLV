@@ -24,16 +24,6 @@
 
 namespace FPLV
 {
-	typedef struct
-	{
-		std::string callsign;
-		std::string icao;
-		std::string frequency;
-		std::string radio_callsign;
-	} RadioCallsignElement_t;
-
-	typedef std::vector<RadioCallsignElement_t> RadioCallsigns_t;
-
 	enum class DirectionAxis
 	{
 		EastWest,
@@ -101,8 +91,6 @@ namespace FPLV
 		std::vector<ValidationColumn> columns;
 		std::vector<ValidationRule> rules;
 		std::vector<ValidationRule> vfr_rules;
-		RadioCallsigns_t RadioCallsigns;
-		bool loaded_from_ese = false;
 
 		ConfigData();
 		void Cleanup();

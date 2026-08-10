@@ -18,7 +18,6 @@
 #include "stdafx.h"
 #include "config.h"
 #include "ConfigManager.h"
-#include "ESEHandler.h"
 #include <algorithm>
 #include <cctype>
 #include <fstream>
@@ -286,93 +285,6 @@ namespace FPLV
 		_ready = false;
 		json_document.SetNull();
 		data.Cleanup();
-	}
-
-	void ConfigManager::LoadRadioCallsigns(void)
-	{
-		data.RadioCallsigns.clear();
-		if (!json_document.IsObject() || !json_document.HasMember("radio_callsigns"))
-			return;
-
-		const rapidjson::Value& radio = json_document["radio_callsigns"];
-		if (!radio.IsObject())
-			return;
-
-		if (radio.HasMember("config") && radio["config"].IsObject())
-		{
-			const rapidjson::Value& cfg = radio["config"];
-			if (cfg.HasMember("load_from_ese") && cfg["load_from_ese"].IsBool() && cfg["load_from_ese"].GetBool())
-			{
-				std::string relative_path = ".\\";
-				if (cfg.HasMember("path_to_ese") && cfg["path_to_ese"].IsString())
-					relative_path = cfg["path_to_ese"].GetString();
-
-				std::string absolute_path;
-				if (relative_path.size() > 1 && relative_path[1] == ':')
-					absolute_path = relative_path;
-				else
-					absolute_path = this->file_path.substr(0, this->file_path.find_last_of('\\') + 1) + relative_path;
-
-				if (ESEHandler::LocateESEFile(absolute_path) && ESEHandler::ParsePositions() > 0)
-				{
-					data.loaded_from_ese = true;
-					ESEHandler::GetRadioCallsigns(data.RadioCallsigns);
-					return;
-				}
-			}
-		}
-
-		if (!radio.HasMember("custom_callsigns") || !radio["custom_callsigns"].IsObject())
-			return;
-
-		const rapidjson::Value& obj = radio["custom_callsigns"];
-		for (rapidjson::Value::ConstMemberIterator it = obj.MemberBegin(); it != obj.MemberEnd(); ++it)
-		{
-			if (!it->name.IsString() || !it->value.IsString())
-				continue;
-
-			RadioCallsignElement_t element;
-			element.callsign = it->name.GetString();
-			element.radio_callsign = it->value.GetString();
-			element.icao = element.callsign.substr(0, element.callsign.find_first_of('_'));
-			data.RadioCallsigns.push_back(element);
-		}
-	}
-
-	void ConfigManager::FindRadioCallsign(std::string callsign, std::string frequency, std::string& radio_callsign)
-	{
-		radio_callsign = callsign;
-		for (const auto& it : data.RadioCallsigns)
-		{
-			if (data.loaded_from_ese)
-			{
-				if (it.icao == callsign.substr(0, callsign.find_first_of('_')) && it.frequency == frequency)
-				{
-					radio_callsign = it.radio_callsign;
-					return;
-				}
-				continue;
-			}
-
-			try
-			{
-				std::regex rgx(it.callsign);
-				if (!std::regex_search(callsign, rgx))
-					continue;
-				if (!it.frequency.empty() && it.frequency != frequency)
-					continue;
-				radio_callsign = it.radio_callsign;
-				return;
-			}
-			catch (...)
-			{
-				if (ToUpperCopy(it.callsign) == ToUpperCopy(callsign))
-				{
-					radio_callsign = it.radio_callsign;
-					return;
-				}
-			}
-		}
 	}
 
 	void ConfigManager::GenerateConfigFile(std::string filepath)

@@ -53,9 +53,7 @@ namespace FPLV
 		void Init(void);
 		void Init(std::string filepath);
 		void Cleanup(void);
-		void LoadRadioCallsigns(void);
 		void GenerateConfigFile(std::string filepath);
-		void FindRadioCallsign(std::string callsign, std::string frequency, std::string& radio_callsign);
 	};
 }
 

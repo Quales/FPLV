@@ -4,7 +4,7 @@
 #define DEFAULT_FILE_CONTENT R"json(
 {
   "plugin_name": "FPLV",
-  "list_name": "FPLV Validation",
+  "list_name": "Flight plan validation",
   "debug_enabled": false,
   "columns": [
     { "code": "status", "title": "VAL", "width": 6, "centered": true },
@@ -82,13 +82,6 @@
         "parity": "any"
       }
     }
-  ],
-  "radio_callsigns": {
-    "config": {
-      "load_from_ese": false,
-      "path_to_ese": ".\\"
-    },
-    "custom_callsigns": {}
-  }
+  ]
 }
 )json"

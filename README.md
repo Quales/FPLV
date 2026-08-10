@@ -51,7 +51,7 @@ Columns are as follows in my configuration : FPLV status / FPLV issues /  FPLV d
 ```json
 {
   "plugin_name": "FPLV",
-  "list_name": "FPLV Validation",
+  "list_name": "Flight plan validation",
   "debug_enabled": false,
   "columns": [
     { "code": "status", "title": "VAL", "width": 6, "centered": true },
