@@ -16,7 +16,7 @@
 */
 #pragma once
 
-#define PLUGIN_VERSION				("2.0.0")
+#define PLUGIN_VERSION				("1.0.4")
 #define CONFIG_FILENAME				"FPLV_rules.json"
 #define PLUGIN_NAME					"FPLV"
 

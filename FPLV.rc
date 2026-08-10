@@ -28,12 +28,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Arthur L"
             VALUE "FileDescription", "FPLV EuroScope plugin"
-            VALUE "FileVersion", "1.0.0.0"
+            VALUE "FileVersion", "1.0.4.0"
             VALUE "InternalName", "FPLV.dll"
             VALUE "LegalCopyright", "Copyright (C) 2026-2026 Arthur L"
             VALUE "OriginalFilename", "FPLV.dll"
             VALUE "ProductName", "FPLV"
-            VALUE "ProductVersion", "1.0.0.0"
+            VALUE "ProductVersion", "1.0.4.0"
         END
     END
     BLOCK "VarFileInfo"
