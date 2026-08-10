@@ -19,6 +19,7 @@
 #ifndef _CONFIGDATA_H_
 #define _CONFIGDATA_H_
 
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -82,6 +83,26 @@ namespace FPLV
 		std::vector<ValidationIssue> issues;
 	};
 
+	struct RVSMFilters
+	{
+		std::vector<std::string> airports;
+		std::vector<std::string> regex;
+	};
+
+	struct RVSMRule
+	{
+		std::string name;
+		std::string description;
+		DirectionAxis axis = DirectionAxis::EastWest;
+		RVSMFilters filters;
+		ValidationSide first_side;
+		ValidationSide second_side;
+		bool enabled = true;
+		bool is_default = false;
+		bool regex_valid = true;
+		std::vector<std::regex> compiled_regex;
+	};
+
 	class ConfigData
 	{
 	public:
@@ -91,6 +112,8 @@ namespace FPLV
 		std::vector<ValidationColumn> columns;
 		std::vector<ValidationRule> rules;
 		std::vector<ValidationRule> vfr_rules;
+		std::vector<RVSMRule> rvsm_rules;
+		std::vector<std::string> load_messages;
 
 		ConfigData();
 		void Cleanup();

@@ -13,75 +13,58 @@
   ],
   "rules": [
     {
-      "name": "West even / East odd",
-      "axis": "east_west",
-      "require_rvsm": true,
-      "west": {
-        "name": "West",
-        "route_markers": ["WEST", "W"],
-        "airport_markers": ["L"],
-        "parity": "even"
+      "name": "Europe",
+      "description": "Europe north/south RVSM rule",
+      "filters": {
+        "airports": ["LFPG", "LFBO", "EHAM"],
+        "regex": ["^LF[A-Z]{2}$", "^EH[A-Z]{2}$"]
       },
-      "east": {
-        "name": "East",
-        "route_markers": ["EAST", "E"],
-        "airport_markers": ["E"],
-        "parity": "odd"
-      }
+      "direction": {
+        "north": "odd",
+        "south": "even"
+      },
+      "enabled": true
     },
     {
-      "name": "North odd / South even",
-      "axis": "north_south",
-      "require_rvsm": true,
-      "north": {
-        "name": "North",
-        "route_markers": ["NORTH", "N"],
-        "airport_markers": ["N"],
-        "parity": "odd"
+      "name": "Caribbean",
+      "description": "Caribbean east/west RVSM rule",
+      "filters": {
+        "airports": ["TNCC", "TNCM"],
+        "regex": ["^TN[A-Z]{2}$"]
       },
-      "south": {
-        "name": "South",
-        "route_markers": ["SOUTH", "S"],
-        "airport_markers": ["S"],
-        "parity": "even"
-      }
+      "direction": {
+        "east": "odd",
+        "west": "even"
+      },
+      "enabled": true
+    },
+    {
+      "name": "USA",
+      "description": "United States east/west RVSM rule",
+      "filters": {
+        "regex": ["^K[A-Z]{3}$"]
+      },
+      "direction": {
+        "east": "odd",
+        "west": "even"
+      },
+      "enabled": true
+    },
+    {
+      "name": "Default",
+      "description": "Fallback rule",
+      "filters": {
+        "regex": [".*"]
+      },
+      "direction": {
+        "east": "odd",
+        "west": "even"
+      },
+      "default": true,
+      "enabled": true
     }
   ],
-  "vfr_rules": [
-    {
-      "name": "VFR east/west",
-      "axis": "east_west",
-      "require_rvsm": false,
-      "west": {
-        "name": "West",
-        "route_markers": ["WEST", "W"],
-        "airport_markers": ["L"],
-        "parity": "any"
-      },
-      "east": {
-        "name": "East",
-        "route_markers": ["EAST", "E"],
-        "airport_markers": ["E"],
-        "parity": "any"
-      }
-    },
-    {
-      "name": "VFR north/south",
-      "axis": "north_south",
-      "require_rvsm": false,
-      "north": {
-        "name": "North",
-        "route_markers": ["NORTH", "N"],
-        "airport_markers": ["N"],
-        "parity": "any"
-      },
-      "south": {
-        "name": "South",
-        "route_markers": ["SOUTH", "S"],
-        "airport_markers": ["S"],
-        "parity": "any"
-      }
-    }
-  ]
+  "vfr_rules": []
 }
 )json"
+

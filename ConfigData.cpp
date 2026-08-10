@@ -33,5 +33,7 @@ namespace FPLV
 		columns.clear();
 		rules.clear();
 		vfr_rules.clear();
+		rvsm_rules.clear();
+		load_messages.clear();
 	}
 }

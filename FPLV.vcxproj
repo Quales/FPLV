@@ -204,7 +204,6 @@
     <ClCompile Include="ConfigManager.cpp" />
     <ClCompile Include="FPLV.cpp" />
     <ClCompile Include="FPLVExt.cpp" />
-    <ClCompile Include="ESEHandler.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Euroscope 3.2|Win32'">Create</PrecompiledHeader>
@@ -219,7 +218,6 @@
     <ClInclude Include="DefaultFileContent.h" />
     <ClInclude Include="FPLV.h" />
     <ClInclude Include="FPLVExt.h" />
-    <ClInclude Include="ESEHandler.h" />
     <ClInclude Include="inc\rapidjson\allocators.h" />
     <ClInclude Include="inc\rapidjson\document.h" />
     <ClInclude Include="inc\rapidjson\encodedstream.h" />

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 
@@ -101,6 +102,98 @@ namespace
 		return value.size() <= 15 ? value : value.substr(0, 15);
 	}
 
+	std::string NormalizeAirportCode(const std::string& value)
+	{
+		return ToUpperCopy(value);
+	}
+
+	bool AirportMatchesRule(const FPLV::RVSMRule& rule, const std::string& airport)
+	{
+		const std::string normalizedAirport = NormalizeAirportCode(airport);
+		for (size_t i = 0; i < rule.filters.airports.size(); ++i)
+		{
+			if (NormalizeAirportCode(rule.filters.airports[i]) == normalizedAirport)
+				return true;
+		}
+
+		for (size_t i = 0; i < rule.compiled_regex.size(); ++i)
+		{
+			if (std::regex_search(normalizedAirport, rule.compiled_regex[i]))
+				return true;
+		}
+		return false;
+	}
+
+	const FPLV::RVSMRule* GetApplicableRvsmRule(const std::vector<FPLV::RVSMRule>& rules, const std::string& airport)
+	{
+		for (size_t i = 0; i < rules.size(); ++i)
+		{
+			const FPLV::RVSMRule& rule = rules[i];
+			if (!rule.enabled)
+				continue;
+			if (AirportMatchesRule(rule, airport))
+				return &rule;
+		}
+
+		return NULL;
+	}
+
+	const FPLV::ValidationSide* DetermineSideFromCoordinates(
+		EuroScopePlugIn::CFlightPlan FlightPlan,
+		FPLV::DirectionAxis axis,
+		const FPLV::ValidationSide& firstSide,
+		const FPLV::ValidationSide& secondSide,
+		std::ostringstream& debugLine)
+	{
+		EuroScopePlugIn::CFlightPlanExtractedRoute extractedRoute = FlightPlan.GetExtractedRoute();
+		const int points = extractedRoute.GetPointsNumber();
+		if (points < 2)
+		{
+			debugLine << " source=markers";
+			return NULL;
+		}
+
+		const EuroScopePlugIn::CPosition start = extractedRoute.GetPointPosition(0);
+		const EuroScopePlugIn::CPosition end = extractedRoute.GetPointPosition(points - 1);
+		const double deltaLat = end.m_Latitude - start.m_Latitude;
+		const double deltaLon = end.m_Longitude - start.m_Longitude;
+
+		debugLine << " source=coords";
+		debugLine << " points=" << points;
+		debugLine << " dlat=" << deltaLat;
+		debugLine << " dlon=" << deltaLon;
+
+		if (axis == FPLV::DirectionAxis::EastWest)
+		{
+			if (deltaLon > 0.0)
+				return &secondSide;
+			if (deltaLon < 0.0)
+				return &firstSide;
+		}
+		else
+		{
+			if (deltaLat > 0.0)
+				return &firstSide;
+			if (deltaLat < 0.0)
+				return &secondSide;
+		}
+
+		debugLine << " coord=flat";
+		return NULL;
+	}
+
+	std::string JoinAirportList(const std::vector<std::string>& items)
+	{
+		std::ostringstream builder;
+		for (size_t i = 0; i < items.size(); ++i)
+		{
+			if (i > 0)
+				builder << ",";
+			builder << items[i];
+		}
+		return builder.str();
+	}
+
 	bool IsVfrFlightPlan(EuroScopePlugIn::CFlightPlan FlightPlan)
 	{
 		if (!FlightPlan.IsValid())
@@ -178,6 +271,102 @@ namespace
 		}
 		return builder.str();
 	}
+
+	FPLV::ValidationResult EvaluateRvsmFlightPlan(
+		EuroScopePlugIn::CFlightPlan FlightPlan,
+		const std::vector<FPLV::RVSMRule>& rules)
+	{
+		FPLV::ValidationResult result;
+		if (!FlightPlan.IsValid())
+			return result;
+
+		if (rules.empty())
+		{
+			result.summary = "";
+			return result;
+		}
+
+		EuroScopePlugIn::CFlightPlanData fpData = FlightPlan.GetFlightPlanData();
+		const char* callsign = FlightPlan.GetCallsign();
+		const std::string origin = fpData.GetOrigin() != NULL ? ToUpperCopy(fpData.GetOrigin()) : "";
+		const std::string destination = fpData.GetDestination() != NULL ? ToUpperCopy(fpData.GetDestination()) : "";
+		const std::string routeText = fpData.GetRoute() != NULL ? ToUpperCopy(fpData.GetRoute()) : "";
+		const int finalAltitude = fpData.GetFinalAltitude();
+		bool specialAltitude = false;
+		const int flightLevel = AltitudeToFlightLevel(finalAltitude, specialAltitude);
+
+		std::ostringstream debugStream;
+		debugStream << "FPL=" << (callsign != NULL ? callsign : "?");
+		debugStream << " plan=" << (fpData.GetPlanType() != NULL && std::toupper(static_cast<unsigned char>(fpData.GetPlanType()[0])) == 'V' ? "VFR" : "IFR");
+		debugStream << " origin=" << (origin.empty() ? "?" : origin);
+		debugStream << " destination=" << (destination.empty() ? "?" : destination);
+		debugStream << " final=" << finalAltitude;
+		if (finalAltitude >= 10000)
+			debugStream << " fl=" << flightLevel;
+
+		const FPLV::RVSMRule* applicableRule = GetApplicableRvsmRule(rules, origin);
+		if (applicableRule == NULL)
+		{
+			debugStream << " rule=none";
+			result.debug = debugStream.str();
+			return result;
+		}
+
+		debugStream << " rule=" << applicableRule->name;
+		if (!applicableRule->description.empty())
+			debugStream << " desc=" << applicableRule->description;
+
+		const FPLV::ValidationSide* activeSide = DetermineSideFromCoordinates(
+			FlightPlan,
+			applicableRule->axis,
+			applicableRule->first_side,
+			applicableRule->second_side,
+			debugStream);
+
+		if (activeSide == NULL)
+		{
+			result.issues.push_back(FPLV::ValidationIssue{ "DIR", "Direction unknown" });
+			debugStream << " side=?";
+		}
+		else
+		{
+			result.direction = activeSide->name;
+			debugStream << " side=" << activeSide->name;
+			if (!specialAltitude && finalAltitude >= 10000 && activeSide->parity != FPLV::AltitudeParity::Any)
+			{
+				if ((activeSide->parity == FPLV::AltitudeParity::Odd && (flightLevel % 2) == 0) ||
+					(activeSide->parity == FPLV::AltitudeParity::Even && (flightLevel % 2) != 0))
+				{
+					result.fl_issue = true;
+					result.issues.push_back(FPLV::ValidationIssue{ "FL", "Level parity mismatch" });
+				}
+			}
+		}
+
+		result.valid = result.issues.empty();
+		if (result.valid)
+		{
+			result.summary = "OK";
+			result.details = result.direction;
+			debugStream << " result=OK";
+			result.debug = debugStream.str();
+			return result;
+		}
+
+		result.summary = result.fl_issue && result.issues.size() == 1 ? "FL" : "ERR";
+		std::ostringstream details;
+		for (size_t i = 0; i < result.issues.size(); ++i)
+		{
+			if (i > 0)
+				details << ",";
+			details << result.issues[i].code;
+		}
+		result.details = details.str();
+		debugStream << " result=" << result.summary;
+		debugStream << " issues=" << JoinIssues(result.issues);
+		result.debug = debugStream.str();
+		return result;
+	}
 }
 
 FPLVExt::FPLVExt() : EuroScopePlugIn::CPlugIn(EuroScopePlugIn::COMPATIBILITY_CODE, PLUGIN_NAME, PLUGIN_VERSION, "Arthur L", "GNU GPLv3")
@@ -208,6 +397,11 @@ void FPLVExt::LoadConfigOrCreateDefault()
 	{
 		config.GenerateConfigFile(configPath.string());
 		config.Init(configPath.string());
+	}
+
+	for (size_t i = 0; i < config.Data().load_messages.size(); ++i)
+	{
+		DisplayUserMessage("Message", PLUGIN_NAME, config.Data().load_messages[i].c_str(), true, true, false, true, false);
 	}
 
 	lastDebugMessages.clear();
@@ -346,6 +540,11 @@ FPLV::ValidationResult FPLVExt::EvaluateFlightPlanForRule(EuroScopePlugIn::CFlig
 
 FPLV::ValidationResult FPLVExt::EvaluateFlightPlan(EuroScopePlugIn::CFlightPlan FlightPlan) const
 {
+	if (!config.Data().rvsm_rules.empty())
+	{
+		return EvaluateRvsmFlightPlan(FlightPlan, config.Data().rvsm_rules);
+	}
+
 	FPLV::ValidationResult combined;
 	if (!FlightPlan.IsValid())
 	{

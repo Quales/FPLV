@@ -170,6 +170,117 @@ namespace
 		return rule;
 	}
 
+	FPLV::RVSMRule ParseRvsmRule(const rapidjson::Value& value, FPLV::ConfigData& data)
+	{
+		FPLV::RVSMRule rule;
+		if (!value.IsObject())
+			return rule;
+
+		if (value.HasMember("name") && value["name"].IsString())
+			rule.name = value["name"].GetString();
+		if (value.HasMember("description") && value["description"].IsString())
+			rule.description = value["description"].GetString();
+		if (value.HasMember("enabled") && value["enabled"].IsBool())
+			rule.enabled = value["enabled"].GetBool();
+		if (value.HasMember("default") && value["default"].IsBool())
+			rule.is_default = value["default"].GetBool();
+
+		if (value.HasMember("filters") && value["filters"].IsObject())
+		{
+			const rapidjson::Value& filters = value["filters"];
+			if (filters.HasMember("airports"))
+				rule.filters.airports = ReadStringArray(filters["airports"]);
+			if (filters.HasMember("regex"))
+				rule.filters.regex = ReadStringArray(filters["regex"]);
+		}
+
+		// Accept top-level filters for compatibility.
+		if (value.HasMember("airports"))
+			rule.filters.airports = ReadStringArray(value["airports"]);
+		if (value.HasMember("regex"))
+			rule.filters.regex = ReadStringArray(value["regex"]);
+
+		FPLV::DirectionAxis axis = FPLV::DirectionAxis::EastWest;
+		bool hasNorthSouth = false;
+		bool hasEastWest = false;
+		if (value.HasMember("direction") && value["direction"].IsObject())
+		{
+			const rapidjson::Value& direction = value["direction"];
+			if (direction.HasMember("north") || direction.HasMember("south"))
+			{
+				axis = FPLV::DirectionAxis::NorthSouth;
+				hasNorthSouth = true;
+			}
+			else if (direction.HasMember("east") || direction.HasMember("west"))
+			{
+				axis = FPLV::DirectionAxis::EastWest;
+				hasEastWest = true;
+			}
+
+			if (direction.HasMember("north") && direction["north"].IsString())
+			{
+				rule.first_side.name = "North";
+				rule.first_side.parity = ParseParity(direction["north"]);
+			}
+			if (direction.HasMember("south") && direction["south"].IsString())
+			{
+				rule.second_side.name = "South";
+				rule.second_side.parity = ParseParity(direction["south"]);
+			}
+			if (direction.HasMember("west") && direction["west"].IsString())
+			{
+				rule.first_side.name = "West";
+				rule.first_side.parity = ParseParity(direction["west"]);
+			}
+			if (direction.HasMember("east") && direction["east"].IsString())
+			{
+				rule.second_side.name = "East";
+				rule.second_side.parity = ParseParity(direction["east"]);
+			}
+		}
+
+		if (!hasNorthSouth && !hasEastWest)
+		{
+			// Default to east/west if direction map is incomplete.
+			rule.first_side.name = "West";
+			rule.second_side.name = "East";
+		}
+		else if (axis == FPLV::DirectionAxis::NorthSouth)
+		{
+			if (rule.first_side.name.empty())
+				rule.first_side.name = "North";
+			if (rule.second_side.name.empty())
+				rule.second_side.name = "South";
+		}
+		else
+		{
+			if (rule.first_side.name.empty())
+				rule.first_side.name = "West";
+			if (rule.second_side.name.empty())
+				rule.second_side.name = "East";
+		}
+		rule.axis = axis;
+
+		if (rule.name.empty())
+			rule.name = "rvsm-rule";
+
+		for (size_t i = 0; i < rule.filters.regex.size(); ++i)
+		{
+			try
+			{
+				rule.compiled_regex.push_back(std::regex(rule.filters.regex[i], std::regex_constants::ECMAScript | std::regex_constants::icase));
+			}
+			catch (const std::regex_error& ex)
+			{
+				rule.enabled = false;
+				rule.regex_valid = false;
+				data.load_messages.push_back("Disabled rule '" + rule.name + "': invalid regex '" + rule.filters.regex[i] + "' (" + ex.what() + ")");
+			}
+		}
+
+		return rule;
+	}
+
 	void ParseRulesArray(const rapidjson::Value& value, std::vector<FPLV::ValidationRule>& rules)
 	{
 		if (!value.IsArray())
@@ -180,6 +291,26 @@ namespace
 			FPLV::ValidationRule rule = ParseRule(value[i]);
 			if (!rule.name.empty())
 				rules.push_back(rule);
+		}
+	}
+
+	void ParseRvsmRulesArray(const rapidjson::Value& value, FPLV::ConfigData& data)
+	{
+		if (!value.IsArray())
+			return;
+
+		for (rapidjson::SizeType i = 0; i < value.Size(); ++i)
+		{
+			const rapidjson::Value& item = value[i];
+			if (!item.IsObject())
+				continue;
+
+			if (item.HasMember("filters") || item.HasMember("direction") || item.HasMember("default") || item.HasMember("airports") || item.HasMember("regex"))
+			{
+				FPLV::RVSMRule rule = ParseRvsmRule(item, data);
+				if (!rule.name.empty())
+					data.rvsm_rules.push_back(rule);
+			}
 		}
 	}
 }
@@ -257,8 +388,28 @@ namespace FPLV
 			data.columns.push_back(column);
 		}
 
-		if (json_document.HasMember("rules"))
-			ParseRulesArray(json_document["rules"], data.rules);
+		if (json_document.HasMember("rules") && json_document["rules"].IsArray())
+		{
+			const rapidjson::Value& rules = json_document["rules"];
+			for (rapidjson::SizeType i = 0; i < rules.Size(); ++i)
+			{
+				const rapidjson::Value& item = rules[i];
+				if (!item.IsObject())
+					continue;
+
+				if (item.HasMember("filters") || item.HasMember("direction") || item.HasMember("default") || item.HasMember("airports") || item.HasMember("regex"))
+				{
+					FPLV::RVSMRule rule = ParseRvsmRule(item, data);
+					if (!rule.name.empty())
+						data.rvsm_rules.push_back(rule);
+					continue;
+				}
+
+				ValidationRule rule = ParseRule(item);
+				if (!rule.name.empty())
+					data.rules.push_back(rule);
+			}
+		}
 		if (json_document.HasMember("vfr_rules"))
 			ParseRulesArray(json_document["vfr_rules"], data.vfr_rules);
 

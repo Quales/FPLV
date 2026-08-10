@@ -60,32 +60,46 @@ Columns are as follows in my configuration : FPLV status / FPLV issues /  FPLV d
   ],
   "rules": [
     {
-      "name": "West even / East odd",
-      "axis": "east_west",
-      "require_rvsm": true,
-      "west": {
-        "name": "West",
-        "route_markers": ["WEST", "W"],
-        "airport_markers": ["L"],
-        "parity": "even"
+      "name": "Europe",
+      "description": "Europe north/south RVSM rule",
+      "filters": {
+        "airports": ["LFPG", "LFBO"],
+        "regex": ["^LF[A-Z]{2}$"]
       },
-      "east": {
-        "name": "East",
-        "route_markers": ["EAST", "E"],
-        "airport_markers": ["E"],
-        "parity": "odd"
-      }
+      "direction": {
+        "north": "odd",
+        "south": "even"
+      },
+      "enabled": true
+    },
+    {
+      "name": "Caribbean",
+      "description": "Caribbean east/west RVSM rule",
+      "filters": {
+        "airports": ["TNCC", "TNCM"],
+        "regex": ["^TN[A-Z]{2}$"]
+      },
+      "direction": {
+        "east": "odd",
+        "west": "even"
+      },
+      "enabled": true
+    },
+    {
+      "name": "Default",
+      "description": "Fallback rule",
+      "filters": {
+        "regex": [".*"]
+      },
+      "direction": {
+        "east": "odd",
+        "west": "even"
+      },
+      "default": true,
+      "enabled": true
     }
   ],
-  "vfr_rules": [
-    {
-      "name": "VFR east/west",
-      "axis": "east_west",
-      "require_rvsm": false,
-      "west": { "name": "West", "route_markers": ["WEST", "W"], "airport_markers": ["L"], "parity": "any" },
-      "east": { "name": "East", "route_markers": ["EAST", "E"], "airport_markers": ["E"], "parity": "any" }
-    }
-  ]
+  "vfr_rules": []
 }
 ```
 
