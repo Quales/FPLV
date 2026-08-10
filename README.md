@@ -1,7 +1,13 @@
 # FPLV (EuroScope Flight Plan Validator)
 
-[Download latest FPLV.dll built](https://github.com/Quales/FPLV/releases/latest)
-[Download latest FPLV.dll release](https://github.com/Quales/FPLV/releases/latest/download/FPLV.dll)
+
+[![Download Latest Release](https://img.shields.io/github/v/release/Quales/FPLV?social&label=Download%20the%20latest%20Release)](https://github.com/Quales/FPLV/releases/latest/download/FPLV.dll)
+
+[![Look Latest Release](https://img.shields.io/github/v/release/Quales/FPLV?social&label=Look%20at%20the%20latest%20Release)](https://github.com/Quales/FPLV/releases/latest)
+
+[![Downloads](https://img.shields.io/github/downloads/Quales/FPLV/total?social)](https://github.com/Quales/FPLV/releases)
+
+---
 
 FPLV is a EuroScope plugin that validates flight plans against configurable rules (RVSM, direction, flight level parity, altitude range) and displays results directly in a custom flight plan list.
 
