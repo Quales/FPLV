@@ -97,6 +97,25 @@ namespace
 		return finalAltitude;
 	}
 
+	bool IsParityMismatch(FPLV::AltitudeParity parity, int flightLevel)
+	{
+		if (parity == FPLV::AltitudeParity::Odd)
+			return (flightLevel % 2) == 0;
+		if (parity == FPLV::AltitudeParity::Even)
+			return (flightLevel % 2) != 0;
+		return false;
+	}
+
+	bool IsParityExceptionFlightLevel(const FPLV::ValidationSide& side, int flightLevel)
+	{
+		for (size_t i = 0; i < side.parity_exceptions.size(); ++i)
+		{
+			if (side.parity_exceptions[i] == flightLevel)
+				return true;
+		}
+		return false;
+	}
+
 	std::string TrimToTag(const std::string& value)
 	{
 		return value.size() <= 15 ? value : value.substr(0, 15);
@@ -334,8 +353,8 @@ namespace
 			debugStream << " side=" << activeSide->name;
 			if (!specialAltitude && finalAltitude >= 10000 && activeSide->parity != FPLV::AltitudeParity::Any)
 			{
-				if ((activeSide->parity == FPLV::AltitudeParity::Odd && (flightLevel % 2) == 0) ||
-					(activeSide->parity == FPLV::AltitudeParity::Even && (flightLevel % 2) != 0))
+				if (IsParityMismatch(activeSide->parity, flightLevel) &&
+					!IsParityExceptionFlightLevel(*activeSide, flightLevel))
 				{
 					result.fl_issue = true;
 					result.issues.push_back(FPLV::ValidationIssue{ "FL", "Level parity mismatch" });
@@ -499,8 +518,8 @@ FPLV::ValidationResult FPLVExt::EvaluateFlightPlanForRule(EuroScopePlugIn::CFlig
 		debugLine << " side=" << activeSide->name;
 		if (!specialAltitude && activeSide->parity != FPLV::AltitudeParity::Any)
 		{
-			if ((activeSide->parity == FPLV::AltitudeParity::Odd && (flightLevel % 2) == 0) ||
-				(activeSide->parity == FPLV::AltitudeParity::Even && (flightLevel % 2) != 0))
+			if (IsParityMismatch(activeSide->parity, flightLevel) &&
+				!IsParityExceptionFlightLevel(*activeSide, flightLevel))
 			{
 				result.fl_issue = true;
 				result.issues.push_back(FPLV::ValidationIssue{ "FL", "Level parity mismatch" });

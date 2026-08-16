@@ -52,6 +52,7 @@ namespace FPLV
 		std::vector<std::string> route_markers;
 		std::vector<std::string> airport_markers;
 		AltitudeParity parity = AltitudeParity::Any;
+		std::vector<int> parity_exceptions;
 	};
 
 	struct ValidationRule

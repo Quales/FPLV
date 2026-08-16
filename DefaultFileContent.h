@@ -34,7 +34,8 @@
       },
       "direction": {
         "east": "odd",
-        "west": "even"
+        "west": "even",
+        "west_allowed_flight_levels": [430, 470, 510]
       },
       "enabled": true
     },
@@ -46,7 +47,8 @@
       },
       "direction": {
         "east": "odd",
-        "west": "even"
+        "west": "even",
+        "west_allowed_flight_levels": [430, 470, 510]
       },
       "enabled": true
     },
@@ -58,7 +60,8 @@
       },
       "direction": {
         "east": "odd",
-        "west": "even"
+        "west": "even",
+        "west_allowed_flight_levels": [430, 470, 510]
       },
       "default": true,
       "enabled": true
@@ -67,4 +70,3 @@
   "vfr_rules": []
 }
 )json"
-

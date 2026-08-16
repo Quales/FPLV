@@ -68,6 +68,25 @@ namespace
 		return result;
 	}
 
+	std::vector<int> ReadIntArray(const rapidjson::Value& value)
+	{
+		std::vector<int> result;
+		if (!value.IsArray())
+		{
+			return result;
+		}
+
+		const auto& arr = value.GetArray();
+		for (rapidjson::SizeType i = 0; i < arr.Size(); ++i)
+		{
+			if (arr[i].IsInt())
+			{
+				result.push_back(arr[i].GetInt());
+			}
+		}
+		return result;
+	}
+
 	FPLV::AltitudeParity ParseParity(const rapidjson::Value& value)
 	{
 		if (!value.IsString())
@@ -136,6 +155,10 @@ namespace
 			side.airport_markers = ReadStringArray(value["airport_markers"]);
 		if (value.HasMember("parity"))
 			side.parity = ParseParity(value["parity"]);
+		if (value.HasMember("parity_exceptions"))
+			side.parity_exceptions = ReadIntArray(value["parity_exceptions"]);
+		else if (value.HasMember("allowed_flight_levels"))
+			side.parity_exceptions = ReadIntArray(value["allowed_flight_levels"]);
 		return side;
 	}
 
@@ -217,26 +240,95 @@ namespace
 				hasEastWest = true;
 			}
 
-			if (direction.HasMember("north") && direction["north"].IsString())
+			if (direction.HasMember("north"))
 			{
 				rule.first_side.name = "North";
-				rule.first_side.parity = ParseParity(direction["north"]);
+				if (direction["north"].IsString())
+				{
+					rule.first_side.parity = ParseParity(direction["north"]);
+				}
+				else if (direction["north"].IsObject())
+				{
+					const rapidjson::Value& north = direction["north"];
+					if (north.HasMember("parity"))
+						rule.first_side.parity = ParseParity(north["parity"]);
+					if (north.HasMember("parity_exceptions"))
+						rule.first_side.parity_exceptions = ReadIntArray(north["parity_exceptions"]);
+					else if (north.HasMember("allowed_flight_levels"))
+						rule.first_side.parity_exceptions = ReadIntArray(north["allowed_flight_levels"]);
+				}
 			}
-			if (direction.HasMember("south") && direction["south"].IsString())
+			if (direction.HasMember("south"))
 			{
 				rule.second_side.name = "South";
-				rule.second_side.parity = ParseParity(direction["south"]);
+				if (direction["south"].IsString())
+				{
+					rule.second_side.parity = ParseParity(direction["south"]);
+				}
+				else if (direction["south"].IsObject())
+				{
+					const rapidjson::Value& south = direction["south"];
+					if (south.HasMember("parity"))
+						rule.second_side.parity = ParseParity(south["parity"]);
+					if (south.HasMember("parity_exceptions"))
+						rule.second_side.parity_exceptions = ReadIntArray(south["parity_exceptions"]);
+					else if (south.HasMember("allowed_flight_levels"))
+						rule.second_side.parity_exceptions = ReadIntArray(south["allowed_flight_levels"]);
+				}
 			}
-			if (direction.HasMember("west") && direction["west"].IsString())
+			if (direction.HasMember("west"))
 			{
 				rule.first_side.name = "West";
-				rule.first_side.parity = ParseParity(direction["west"]);
+				if (direction["west"].IsString())
+				{
+					rule.first_side.parity = ParseParity(direction["west"]);
+				}
+				else if (direction["west"].IsObject())
+				{
+					const rapidjson::Value& west = direction["west"];
+					if (west.HasMember("parity"))
+						rule.first_side.parity = ParseParity(west["parity"]);
+					if (west.HasMember("parity_exceptions"))
+						rule.first_side.parity_exceptions = ReadIntArray(west["parity_exceptions"]);
+					else if (west.HasMember("allowed_flight_levels"))
+						rule.first_side.parity_exceptions = ReadIntArray(west["allowed_flight_levels"]);
+				}
 			}
-			if (direction.HasMember("east") && direction["east"].IsString())
+			if (direction.HasMember("east"))
 			{
 				rule.second_side.name = "East";
-				rule.second_side.parity = ParseParity(direction["east"]);
+				if (direction["east"].IsString())
+				{
+					rule.second_side.parity = ParseParity(direction["east"]);
+				}
+				else if (direction["east"].IsObject())
+				{
+					const rapidjson::Value& east = direction["east"];
+					if (east.HasMember("parity"))
+						rule.second_side.parity = ParseParity(east["parity"]);
+					if (east.HasMember("parity_exceptions"))
+						rule.second_side.parity_exceptions = ReadIntArray(east["parity_exceptions"]);
+					else if (east.HasMember("allowed_flight_levels"))
+						rule.second_side.parity_exceptions = ReadIntArray(east["allowed_flight_levels"]);
+				}
 			}
+
+			if (direction.HasMember("north_parity_exceptions"))
+				rule.first_side.parity_exceptions = ReadIntArray(direction["north_parity_exceptions"]);
+			else if (direction.HasMember("north_allowed_flight_levels"))
+				rule.first_side.parity_exceptions = ReadIntArray(direction["north_allowed_flight_levels"]);
+			if (direction.HasMember("south_parity_exceptions"))
+				rule.second_side.parity_exceptions = ReadIntArray(direction["south_parity_exceptions"]);
+			else if (direction.HasMember("south_allowed_flight_levels"))
+				rule.second_side.parity_exceptions = ReadIntArray(direction["south_allowed_flight_levels"]);
+			if (direction.HasMember("west_parity_exceptions"))
+				rule.first_side.parity_exceptions = ReadIntArray(direction["west_parity_exceptions"]);
+			else if (direction.HasMember("west_allowed_flight_levels"))
+				rule.first_side.parity_exceptions = ReadIntArray(direction["west_allowed_flight_levels"]);
+			if (direction.HasMember("east_parity_exceptions"))
+				rule.second_side.parity_exceptions = ReadIntArray(direction["east_parity_exceptions"]);
+			else if (direction.HasMember("east_allowed_flight_levels"))
+				rule.second_side.parity_exceptions = ReadIntArray(direction["east_allowed_flight_levels"]);
 		}
 
 		if (!hasNorthSouth && !hasEastWest)

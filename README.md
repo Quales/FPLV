@@ -87,7 +87,8 @@ Columns are as follows in my configuration : FPLV status / FPLV issues /  FPLV d
       },
       "direction": {
         "east": "odd",
-        "west": "even"
+        "west": "even",
+        "west_allowed_flight_levels": [43, 47, 51]
       },
       "enabled": true
     },
@@ -99,7 +100,8 @@ Columns are as follows in my configuration : FPLV status / FPLV issues /  FPLV d
       },
       "direction": {
         "east": "odd",
-        "west": "even"
+        "west": "even",
+        "west_allowed_flight_levels": [43, 47, 51]
       },
       "default": true,
       "enabled": true
